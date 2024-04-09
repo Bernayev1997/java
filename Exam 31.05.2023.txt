@@ -1,0 +1,222 @@
+package com.almazjanbernayev;
+
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.TextArea;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JLayeredPane;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
+
+/**
+ * @author Almazjan Bernayev
+ * */
+
+class MyFrame extends JFrame implements WindowListener {
+
+	JLabel textFieldLabel, historyLabel, emptyLabel;
+	JTextField textField;
+	TextArea textArea;
+	JButton button;
+	Font labelFont, buttonFont, textFont, textAreaFont;
+	
+	public int x, y;
+	public long startTime = System.currentTimeMillis();
+	
+	public MyFrame() {
+		
+		setTitle("Exam 31.05.2023");
+		setSize(700, 600);
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		
+		// fonts
+		labelFont = new Font("Arial", Font.PLAIN, 20);
+		buttonFont = new Font("Arial", Font.ITALIC, 20);
+		textFont = new Font("Courier New", Font.PLAIN, 20); // Lucida Console
+		textAreaFont = new Font("Courier New", Font.PLAIN, 18);
+		
+		// labels
+		textFieldLabel = new JLabel("Textul pentru afisare:");
+		textFieldLabel.setLayout(null);
+		textFieldLabel.setBounds(50, 50, 200, 20);
+		textFieldLabel.setFont(labelFont);
+		
+		historyLabel = new JLabel("Istoric:");
+		historyLabel.setLayout(null);
+		historyLabel.setBounds(50, 120, 200, 20);
+		historyLabel.setFont(labelFont);
+		
+		emptyLabel = new JLabel();
+		emptyLabel.setLayout(null);
+		emptyLabel.setBounds(50, 400, 300, 20);
+		emptyLabel.setFont(labelFont);
+		
+		// text field
+		textField = new JTextField();
+		textField.setLayout(null);
+		textField.setBounds(50, 80, 200, 30);
+		textField.setFont(textFont);
+		
+		// text area
+		textArea = new TextArea();
+		textArea.setBounds(50,  150,  200,  200);
+		textArea.setFont(textAreaFont);
+		
+		// button
+		button = new JButton("SALVEAZA");
+		button.setLayout(null);
+		button.setBounds(50, 360, 150, 30);
+		button.setFocusable(false);
+		button.setFont(buttonFont);
+		button.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				try {
+					checkNullTextArea(textArea);
+					BufferedWriter writer = new BufferedWriter(new FileWriter("Istoric.txt"));
+					writer.write(textArea.getText());
+					writer.close();
+					emptyLabel.setForeground(new Color(100, 180, 50));
+					emptyLabel.setText("Fisier salvat cu succes");
+					textArea.setText("");
+				} catch (Exception e1) {
+					emptyLabel.setForeground(Color.RED);
+					emptyLabel.setText("Nu exista text pentru afisare");
+				}
+			}
+			
+		});
+		
+		DrawingZone drawingZone = new DrawingZone();
+		
+		JLayeredPane layeredPane = new JLayeredPane();
+		layeredPane.setBounds(300, 0, 400, 550);
+		
+		JPanel panel = new JPanel();
+		panel.setBounds(0, 0, 350, 550);
+		panel.setBorder(BorderFactory.createLineBorder(Color.BLACK, 3));
+		layeredPane.add(panel, Integer.valueOf(0));
+		drawingZone.setBounds(1, 1, 348, 548);
+		layeredPane.add(drawingZone, Integer.valueOf(1));
+		
+		add(textFieldLabel);
+		add(textField);
+		add(historyLabel);
+		add(textArea);
+		add(button);
+		add(emptyLabel);
+		add(layeredPane);
+		
+		setLayout(null);
+		setVisible(true);
+		
+	}
+	
+	class DrawingZone extends JPanel implements MouseListener, MouseMotionListener {
+
+		public DrawingZone() {
+			setBackground(Color.WHITE);
+			addMouseListener(this);
+			addMouseMotionListener(this);
+		}
+		
+		@Override
+		public void paint(Graphics g) {
+			Graphics2D graphics = (Graphics2D) g;
+			super.paint(graphics);
+			graphics.setColor(Color.BLACK);
+			graphics.setFont(labelFont);
+			graphics.drawString(textField.getText(), (long)x, (long)y);
+		}
+		
+		@Override
+		public void mouseDragged(MouseEvent e) {
+		}
+		@Override
+		public void mouseMoved(MouseEvent e) {
+		}
+
+		@Override
+		public void mouseClicked(MouseEvent e) {
+			long reactionTime = System.currentTimeMillis() - startTime;
+			x = e.getX();
+			y = e.getY();
+			textArea.append(textField.getText() + "\nx:" + x + " y:" + y + 
+												" t:" + reactionTime + "ms\n");
+			startTime = System.currentTimeMillis();
+			repaint();
+			textField.setText("");
+		}
+		@Override
+		public void mousePressed(MouseEvent e) {
+		}
+		@Override
+		public void mouseReleased(MouseEvent e) {
+		}
+		@Override
+		public void mouseEntered(MouseEvent e) {
+		}
+		@Override
+		public void mouseExited(MouseEvent e) {
+		}
+		
+	}
+	
+	public void checkNullTextArea(TextArea textArea) throws Exception{
+		String string = textArea.getText().trim();
+		if(string.equals("")) {
+			throw new Exception("Nu exista text pentru afisare");
+		}
+	}
+	
+	@Override
+	public void windowOpened(WindowEvent e) {
+	}
+	@Override
+	public void windowClosing(WindowEvent e) {
+	}
+	@Override
+	public void windowClosed(WindowEvent e) {
+	}
+	@Override
+	public void windowIconified(WindowEvent e) {
+	}
+	@Override
+	public void windowDeiconified(WindowEvent e) {
+	}
+	@Override
+	public void windowActivated(WindowEvent e) {
+	}
+	@Override
+	public void windowDeactivated(WindowEvent e) {
+	}
+	
+}
+
+public class Main {
+
+	public static void main(String[] args) {
+
+		SwingUtilities.invokeLater(() -> new MyFrame());
+
+	}
+
+}
